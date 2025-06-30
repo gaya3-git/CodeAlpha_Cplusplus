@@ -40,6 +40,11 @@ int main() {
     cout << "1. Register\n2. Login\nEnter choice: ";
     cin >> choice;
 
+    if (choice != 1 && choice != 2) {
+        cout << "Invalid choice entered!\n";
+        return 0;
+    }
+
     cout << "Username: ";
     cin >> username;
     cout << "Password: ";
