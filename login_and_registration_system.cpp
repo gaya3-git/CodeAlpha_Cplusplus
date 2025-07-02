@@ -1,63 +1,98 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <filesystem>
 using namespace std;
 
-bool registerUser(const string& username, const string& password) {
-    ifstream infile("users.txt");
-    string u, p;
-
-    while (infile >> u >> p) {
-        if (u == username) {
-            cout << "Username already exists!\n";
-            return false;
-        }
+// Function to validate username and password
+bool validateUsernamePassword(const string& username, const string& password) {
+    if (username.empty() || password.empty()) {
+        cout << "Username or password cannot be empty!" << endl;
+        return false;
     }
-    infile.close();
-
-    ofstream outfile("users.txt", ios::app);
-    outfile << username << " " << password << endl;
+    if (username.find(' ') != string::npos || password.find(' ') != string::npos) {
+        cout << "Username or password cannot contain spaces!" << endl;
+        return false;
+    }
     return true;
 }
 
-bool loginUser(const string& username, const string& password) {
-    ifstream infile("users.txt");
-    string u, p;
-
-    while (infile >> u >> p) {
-        if (u == username && p == password) {
-            return true;
-        }
-    }
-
-    return false;
+// Check if a user already exists
+bool userExists(const string& username) {
+    string filename = username + ".txt";
+    return filesystem::exists(filename);
 }
 
-int main() {
-    int choice;
+// Register a new user
+void registerUser() {
     string username, password;
-
-    cout << "1. Register\n2. Login\nEnter choice: ";
-    cin >> choice;
-
-    if (choice != 1 && choice != 2) {
-        cout << "Invalid choice entered!\n";
-        return 0;
-    }
-
-    cout << "Username: ";
+    cout << "Enter a new username: ";
     cin >> username;
-    cout << "Password: ";
+    cout << "Enter a new password: ";
     cin >> password;
 
-    if (choice == 1) {
-        if (registerUser(username, password))
-            cout << "Registration successful!\n";
-    } else if (choice == 2) {
-        if (loginUser(username, password))
-            cout << "Login successful!\n";
+    if (!validateUsernamePassword(username, password))
+        return;
+
+    if (userExists(username)) {
+        cout << "Username already exists! Try another one.\n";
+        return;
+    }
+
+    ofstream file(username + ".txt");
+    file << username << endl << password << endl;
+    file.close();
+
+    cout << "Registration successful!\n";
+}
+
+// Login function
+void loginUser() {
+    string username, password;
+    cout << "Enter your username: ";
+    cin >> username;
+    cout << "Enter your password: ";
+    cin >> password;
+
+    if (!validateUsernamePassword(username, password))
+        return;
+
+    if (!userExists(username)) {
+        cout << "User not found. Please register first.\n";
+        return;
+    }
+
+    ifstream file(username + ".txt");
+    string storedUsername, storedPassword;
+    getline(file, storedUsername);
+    getline(file, storedPassword);
+    file.close();
+
+    if (username == storedUsername && password == storedPassword) {
+        cout << "Login successful! Welcome back, " << username << "!\n";
+    } else {
+        cout << "Incorrect username or password.\n";
+    }
+}
+
+// Main menu
+int main() {
+    int choice;
+    while (true) {
+        cout << "\n--- Login and Registration System ---\n";
+        cout << "1. Register\n2. Login\n3. Exit\nChoose option: ";
+        cin >> choice;
+
+        if (choice == 1)
+            registerUser();
+        else if (choice == 2)
+            loginUser();
+        else if (choice == 3) {
+            cout << "Goodbye!\n";
+            break;
+        }
         else
-            cout << "Invalid credentials!\n";
+            cout << "Invalid choice. Try again.\n";
     }
 
     return 0;
